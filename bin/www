@@ -1,0 +1,46 @@
+#!/usr/bin/env node
+
+var app = require('../app');
+var http = require('http');
+var sequelize = require('../config/database');
+require('../modules/user/userModel');
+
+var port = process.env.PORT || 3000;
+app.set('port', port);
+
+var server = http.createServer(app);
+
+sequelize.sync()
+    .then(() => {
+        console.log('Banco de dados sincronizado!');
+        server.listen(port);
+        server.on('error', onError);
+        server.on('listening', onListening);
+    })
+    .catch((error) => {
+        console.error('Erro ao sincronizar banco:', error.message);
+        process.exit(1);
+    });
+
+function onError(error) {
+    if (error.syscall !== 'listen') {
+        throw error;
+    }
+
+    switch (error.code) {
+        case 'EACCES':
+            console.error('Porta ' + port + ' requer privilégios elevados.');
+            process.exit(1);
+            break;
+        case 'EADDRINUSE':
+            console.error('Porta ' + port + ' já está em uso.');
+            process.exit(1);
+            break;
+        default:
+            throw error;
+    }
+}
+
+function onListening() {
+    console.log('QuizMaster API rodando em http://localhost:' + port);
+}
